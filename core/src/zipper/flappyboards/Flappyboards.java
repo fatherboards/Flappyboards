@@ -2,6 +2,7 @@ package zipper.flappyboards;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -11,6 +12,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Align;
+
+import java.util.Random;
 
 
 public class Flappyboards extends ApplicationAdapter {
@@ -23,14 +26,18 @@ public class Flappyboards extends ApplicationAdapter {
 	Rectangle topPipeRect;
 	Rectangle bottomPipeRect;
 	Rectangle birdRect;
+	Random rand = new Random();
+	Sound[] winSound;
 	float birdY = 200;
 	float pipesX=800;
 	int birdDelta = 1;
 	boolean playing = true;
-	int pipePerson = (int)Math.random()*12;
+	int pipePerson = rand.nextInt(12);
+	int score = 0;
 	OrthographicCamera camera;
 	@Override
 	public void create () {
+		winSound = new Sound[]{Gdx.audio.newSound(Gdx.files.internal("Cena.mp3")), Gdx.audio.newSound(Gdx.files.internal("Gelato.mp3")), Gdx.audio.newSound(Gdx.files.internal("Khaled.mp3")), Gdx.audio.newSound(Gdx.files.internal("Patrick.mp3")), Gdx.audio.newSound(Gdx.files.internal("Robotics.mp3")), Gdx.audio.newSound(Gdx.files.internal("Spanking.mp3")), Gdx.audio.newSound(Gdx.files.internal("Yeah.mp3")), Gdx.audio.newSound(Gdx.files.internal("What.mp3"))};
 		people = new Texture[]{new Texture("andre.PNG"), new Texture("berger.PNG"), new Texture("billini.PNG"), new Texture("brett.png"), new Texture("brody.PNG"), new Texture("carsen.PNG"), new Texture("christian.PNG"), new Texture("gabriel.PNG"), new Texture("jackson.PNG"), new Texture("revilla.PNG"), new Texture("vega.PNG"), new Texture("zipper.PNG")};
 		batch = new SpriteBatch();
 		bird = new Texture("fatherboardslogo.png");
@@ -83,20 +90,27 @@ public class Flappyboards extends ApplicationAdapter {
 			birdDelta-=1;
 		}
 		birdY+=birdDelta;
-		pipesX-=2;
-		if(pipesX<324) pipesX-=8;
+		pipesX-=5;
+		if(pipesX<310) pipesX-=8;
 		birdRect = new Rectangle(400, birdY, 75, 75);
-		topPipeRect = new Rectangle(pipesX,380,50,150);
+		topPipeRect = new Rectangle(pipesX,330,50,150);
 		bottomPipeRect = new Rectangle(pipesX,0,50,150);
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
 		batch.draw(bird, 400, birdY, 75, 75);
 		batch.draw(topPipe, pipesX, topPipeRect.y, topPipeRect.width, topPipeRect.height);
-		batch.draw(bottomPipe,pipesX, bottomPipeRect.y, bottomPipeRect.width, bottomPipeRect.height);
+		batch.draw(bottomPipe, pipesX, bottomPipeRect.y, bottomPipeRect.width, bottomPipeRect.height);
+		if(pipesX < 324 && pipesX > 319) {
+			score++;
+			winSound[rand.nextInt(8)].play();
+		}
 		if(pipesX <-50) {
-			pipePerson = (int)Math.random()*12;
+			pipePerson = rand.nextInt(12);
 			pipesX = 800;
 		}
+		font.setColor(Color.RED);
+		font.draw(batch, "SCORE: " + score, 75, 470, 0, Align.center, true);
+		font.setColor(Color.CYAN);
 		batch.end();
 		if(birdRect.overlaps(topPipeRect) || birdRect.overlaps(bottomPipeRect)) {
 			return false;
@@ -111,11 +125,12 @@ public class Flappyboards extends ApplicationAdapter {
 		batch.begin();
 		batch.draw(bird, 200, 25, 400, 400);
 		font.draw(batch, "CLICK THE LOGO TO PLAY AGAIN",410, 440, 0, Align.center, true);
-		font.draw(batch, "SCORE: ", 125, 75, 0, Align.center, true);
+		font.draw(batch, "SCORE: " + score, 125, 75, 0, Align.center, true);
 		batch.end();
 		if (Gdx.input.isTouched()) {
 			if((new Rectangle(500,300,400,400)).overlaps(new Rectangle(Gdx.input.getX()-500,Gdx.input.getY()-150,400,400))) {
-				pipesX = 324;
+				score = 0;
+				pipesX = 800;
 				playing = playing();
 			}
 		}
